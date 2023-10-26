@@ -52,16 +52,42 @@ BOOL CALLBACK DlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			HWND hList = GetDlgItem(hwnd, IDC_LIST3);
 			int i = SendMessage(hCombo, CB_GETCURSEL, 0, 0);
 			SendMessage(hCombo, CB_GETLBTEXT, i, (LPARAM)sz_buffer);
-			SendMessage(hList, LB_ADDSTRING, i, (LPARAM)sz_buffer);
+			
 			CHAR sz_message[SIZE]{};
 			sprintf(sz_message, "Вы выбрали № %i, со значением \"%s\"", i, sz_buffer);
-			MessageBox(hwnd, sz_message, "Info", MB_OK | MB_ICONINFORMATION);
+			int result = MessageBox(hwnd, sz_message, "Info", MB_OKCANCEL | MB_ICONINFORMATION);
+			if (result == 1)
+			{
+				SendMessage(hList, LB_ADDSTRING, i, (LPARAM)sz_buffer);
+			}
 		}
 		break;
+		case IDC_DELETE:
+		{
+			CONST INT SIZE = 256;
+			CHAR sz_buffer[SIZE] = {};
+			
+			HWND hList = GetDlgItem(hwnd, IDC_LIST3);
+			int i = SendMessage(hList, CB_GETCURSEL, 0, 0);
+			
+			CHAR sz_message[SIZE]{};
+			sprintf(sz_message, "Вы точно хотите удалить строку", i, sz_buffer);
+			int result = MessageBox(hwnd, sz_message, "Удаление строки", MB_OKCANCEL | MB_ICONQUESTION | MB_DEFBUTTON2);
+			if (result == 1)
+			{
+				SendMessage(hList, LB_DELETESTRING, i, (LPARAM)sz_buffer);
+			}
+			
+			
+			
+		}
+		break;
+
 		case IDCANCEL: EndDialog(hwnd, 0);
 		}
 		break;
 	case WM_CLOSE:EndDialog(hwnd, 0);
+	
 	}
 	return FALSE;
 
