@@ -1,8 +1,19 @@
+#define _CRT_SECURE_NO_WARNINGS
 #include <cstdio>	
-#include<Windows.h>
-#include"resource.h"
+#include <string>
+#include <vector>
+#include <Windows.h>
+#include "resource1.h"
 
-CONST CHAR g_sz_WINDOW_CLASS[] = "My Window Class "; // Имя класса окна
+#define IDC_COMBO	1001
+#define IDC_BUTTON_APPLY	1002
+
+
+//CONST CHAR* g_CURSOR[] = { "Busy.ani", "Normal Select.ani", "Working In Background.ani", "Move.ani" };
+
+CONST CHAR g_sz_WINDOW_CLASS[] =  " "; // Имя класса окна
+
+std::vector<std::string> LoadCursorsFromDir(const std::string& directory);
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
@@ -18,9 +29,13 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPSTR lpCmdLine, IN
 	wc.cbClsExtra = 0;
 	wc.style = 0;
 
-	wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON_CPU));
-	wc.hIconSm = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON_RAM));
-	wc.hCursor = LoadIcon(NULL, IDC_ARROW);
+	//wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON_CPU));
+	//wc.hIconSm = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON_RAM));
+	wc.hIcon = (HICON)LoadImage(hInstance, "crane_icon_181791.ico", IMAGE_ICON, LR_DEFAULTSIZE, LR_DEFAULTSIZE, LR_LOADFROMFILE);
+	wc.hIcon = (HICON)LoadImage(hInstance, "light_bulb_settings_energy_electricity_icon_181815.ico", IMAGE_ICON, LR_DEFAULTSIZE, LR_DEFAULTSIZE, LR_LOADFROMFILE);
+	
+	wc.hCursor = LoadCursor(NULL, IDC_HAND); //(HCURSOR)LoadImage(hInstance, "starcraft_01.ani", IMAGE_CURSOR, LR_DEFAULTSIZE, LR_DEFAULTSIZE, LR_LOADFROMFILE); 
+	
 	wc.hbrBackground = HBRUSH(COLOR_WINDOW + 1);
 
 	wc.hInstance = hInstance;
@@ -37,14 +52,28 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPSTR lpCmdLine, IN
 	}
 
 	//-------------// 2) Создание окна:
+
+	INT screen_width = GetSystemMetrics(SM_CXSCREEN);
+	INT screen_height = GetSystemMetrics(SM_CYSCREEN);
+
+	//CHAR sz_msg[MAX_PATH]{};
+	//sprintf(sz_msg, "Resolution: %i%i", screen_width, screen_height);
+	//MessageBox(NULL, sz_msg, "Screen resolution", MB_OK);
+
+	INT window_width = screen_width * 3 / 4;
+	INT window_height = screen_height * 3 / 4;
+	
+	INT start_x = screen_width / 8;
+	INT start_y = screen_height / 8;
+
 	HWND hwnd = CreateWindowEx
 	(
 		NULL, //ExStyle
 		g_sz_WINDOW_CLASS, //Class name
 		g_sz_WINDOW_CLASS, //Window name
 		WS_OVERLAPPEDWINDOW, // У главного окна всегда будет такой стиль
-		CW_USEDEFAULT, CW_USEDEFAULT, //Position - Положение окна на экране
-		CW_USEDEFAULT, CW_USEDEFAULT, //Size - Размер окна
+		start_x, start_y, //Position - Положение окна на экране
+		window_width, window_height, //Size - Размер окна
 		NULL,
 		NULL,
 		hInstance,
@@ -72,15 +101,198 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPSTR lpCmdLine, IN
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	static HCURSOR hCursor;
+	
+	HDC hdc;             // индекс контекста устройства
+	PAINTSTRUCT ps;      // структура для рисования
+
+	static WPARAM fwSizeType;
+	static WORD   nWidth;
+	static WORD   nHeight;
+
 	switch (uMsg)
 	{
+	
+
+
+
 	case WM_CREATE:
-		break;
+	{
+		HWND hCombo = CreateWindowEx
+		(
+			NULL,
+			"ComboBox",
+			"",
+			WS_CHILD | WS_VISIBLE | CBS_DROPDOWN | WS_VSCROLL,
+			10, 10,
+			200, 200,
+			hwnd,
+			(HMENU)IDC_COMBO,
+			GetModuleHandle(NULL),
+			NULL
+		);
+		/*for (int i = 0; i < sizeof(g_CURSOR) / sizeof(g_CURSOR[0]); i++)
+		{
+			SendMessage(hCombo, CB_ADDSTRING, 0, (LPARAM)g_CURSOR[i]);
+		}*/
+		CHAR sz_current_directory[MAX_PATH]{};
+		GetCurrentDirectory(MAX_PATH, sz_current_directory);
+		MessageBox(hwnd, sz_current_directory, "Current dir", MB_OK);
+		
+		std::vector<std::string> cursors = LoadCursorsFromDir("starcraft-original\\*");
+		for (int i = 0; i < cursors.size(); i++)
+		{
+			SendMessage(hCombo, CB_ADDSTRING, 0, (LPARAM)cursors[i].c_str());
+		}
+
+		HWND hButton = CreateWindowEx
+		(
+			NULL,
+			"Button",
+			"Apply",
+			WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+			220, 10,
+			100, 24,
+			hwnd,
+			(HMENU)IDC_BUTTON_APPLY,
+			GetModuleHandle(NULL),
+			NULL
+
+		);
+	}
+	break;
+
+	case WM_PAINT:
+	{
+		char buf[80];
+
+		hdc = BeginPaint(hwnd, &ps);
+
+		RECT rect;
+		GetWindowRect(hwnd, &rect);
+		CHAR sz_message[MAX_PATH]{};
+		sprintf
+		(
+			sz_message, "%s - Position %ix%i, Size: %ix%i",
+			g_sz_WINDOW_CLASS,
+			rect.left, rect.top,
+			rect.right - rect.left, rect.bottom - rect.top
+		);
+
+		/*sprintf(buf, "%4.4dx%4.4d (%1.1d)",
+			nWidth, nHeight, fwSizeType);*/
+
+		// Выводим размеры окна
+		TextOut(hdc, 20, 100, sz_message, 256);
+
+		EndPaint(hwnd, &ps);
+		return 0;
+	}
+
+	//case WM_SIZE:
+	//{
+	//	// Способ изменения размера окна
+	//	fwSizeType = wParam;
+
+	//	// Ширина внутренней области окна
+	//	nWidth = LOWORD(lParam);
+
+	//	// Высота внутренней области окна
+	//	nHeight = HIWORD(lParam);
+
+	//	// Отмечаем все окно как требующее
+	//	// обновления
+	//	InvalidateRect(hwnd, NULL, TRUE);
+
+	//	// Посылаем себе сообщение WM_PAINT
+	//	UpdateWindow(hwnd);
+	//	return 0;
+	//}
+	//break;
+
+	/*case WM_SETCURSOR:
+	{
+		SetCursor(hCursor);
+	}
+	break;*/
+	case WM_SIZE:
+	case WM_MOVE:
+	{
+		RECT rect;
+		GetWindowRect(hwnd, &rect);
+		CHAR sz_message[MAX_PATH]{};
+		sprintf
+		(
+			sz_message, "%s - Position %ix%i, Size: %ix%i",
+			g_sz_WINDOW_CLASS, 
+			rect.left, rect.top, 
+			rect.right-rect.left, rect.bottom-rect.top
+		);
+		SendMessage(hwnd, WM_SETTEXT, 0, (LPARAM)sz_message);
+	}
+	break;
 	case WM_COMMAND:
+	{
+		switch (LOWORD(wParam))
+		{
+		case IDC_BUTTON_APPLY:
+		{
+			HWND hCombo = GetDlgItem(hwnd, IDC_COMBO);
+			int i = SendMessage(hCombo, CB_GETCURSEL, 0, 0);
+			CHAR sz_filename[_MAX_FNAME]{};
+			CHAR sz_filepath[_MAX_PATH] = "starcraft-original\\";
+			SendMessage(hCombo, CB_GETLBTEXT, i, (LPARAM)sz_filename);
+			strcat(sz_filepath, sz_filename);
+			MessageBox(hwnd, sz_filepath, "Info", MB_OK);
+			//HCURSOR 
+				hCursor = (HCURSOR)LoadImage(
+				GetModuleHandle(NULL),
+				sz_filepath,
+				IMAGE_CURSOR,
+				LR_DEFAULTSIZE, LR_DEFAULTSIZE,
+				LR_LOADFROMFILE);
+				//SetCursorPos(500,500);
+				SetClassLong(hwnd, GCL_HCURSOR, (LONG)hCursor);
+				SetClassLong(GetDlgItem(hwnd, IDC_BUTTON_APPLY), GCL_HCURSOR, (LONG)hCursor);
+				SetClassLong(GetDlgItem(hwnd, IDC_COMBO), GCL_HCURSOR, (LONG)hCursor);
+
+			//SetCursor(hCursor);
+		}
 		break;
+		}
+	}break;
+		
 	case WM_DESTROY:PostQuitMessage(0);break;
 	case WM_CLOSE:	DestroyWindow(hwnd); break;
 	default:		return DefWindowProc(hwnd, uMsg, wParam, lParam);
 	}
 	return NULL;
+}
+std::vector<std::string> LoadCursorsFromDir(const std::string& directory)
+{
+	std::vector<std::string> files;
+	WIN32_FIND_DATA data;
+
+	for (
+		HANDLE hFind = FindFirstFile(directory.c_str(), &data);
+
+		FindNextFile(hFind, &data);
+		)
+	{
+		//std::string::c_str() возвращает C-string, хранящийся в объекте std::string
+		if (
+			strcmp(strrchr(data.cFileName, '.'), ".cur") == 0 ||
+			strcmp(strrchr(data.cFileName, '.'), ".ani") == 0
+			)
+			files.push_back(data.cFileName);
+	}
+	/*HANDLE hFind = FindFirstFile(directory.c_str(), &data);
+	if (hFind != INVALID_HANDLE_VALUE)
+	{
+		do
+		{
+			files.push_back(data.cFileName);
+		} while (FindNextFile(hFind, &data);
+	}*/
+	return files;
 }

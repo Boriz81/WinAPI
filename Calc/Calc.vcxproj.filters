@@ -20,32 +20,13 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="resource1.h">
+    <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="Resource1.rc">
+    <ResourceCompile Include="Resource.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="light_bulb_settings_energy_electricity_icon_181815.ico">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="crane_icon_181791.ico">
-      <Filter>Resource Files</Filter>
-    </Image>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="cursor1.cur">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="Text Select.cur">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="Starcraft_01.ani">
-      <Filter>Resource Files</Filter>
-    </None>
   </ItemGroup>
 </Project>
